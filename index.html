@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0f0c29">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Расписание 4КС-23</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-gradient-1: #0f0c29;
+            --bg-gradient-2: #302b63;
+            --bg-gradient-3: #24243e;
+            --bg-solid: #0f0c29;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --accent-1: #00d4ff;
+            --accent-2: #7b2cbf;
+            --accent-3: #ff6b6b;
+            --accent-4: #ffd93d;
+            --practice-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --red-week-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        html {
+            background: var(--bg-solid);
+            overscroll-behavior: none;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            background: var(--bg-solid);
+            background-image: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 50%, var(--bg-gradient-3) 100%);
+            background-size: 100% 100%;
+            color: var(--text-primary);
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top));
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+            padding-left: max(20px, env(safe-area-inset-left));
+            padding-right: max(20px, env(safe-area-inset-right));
+            position: relative;
+            overflow-x: hidden;
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            z-index: -1;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .bg-orb.orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--accent-1);
+            top: -150px;
+            right: -150px;
+            animation: float1 25s ease-in-out infinite;
+        }
+
+        .bg-orb.orb-2 {
+            width: 350px;
+            height: 350px;
+            background: var(--accent-2);
+            bottom: -100px;
+            left: -100px;
+            animation: float2 25s ease-in-out infinite;
+        }
+
+        @keyframes float1 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-30px, 30px); }
+        }
+
+        @keyframes float2 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(30px, -30px); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .bg-orb { animation: none; }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 30px 20px;
+            margin-bottom: 25px;
+        }
+
+        .header-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            color: var(--accent-1);
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, var(--accent-1) 50%, var(--accent-2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header-subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .week-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .week-indicator .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .week-indicator .dot.blue { background: var(--accent-1); }
+        .week-indicator .dot.red { background: var(--accent-3); }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        /* Day cards */
+        .day-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .day-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.4);
+        }
+
+        .day-card.today {
+            border: 2px solid var(--accent-1);
+            box-shadow: 0 0 40px rgba(0, 212, 255, 0.2);
+        }
+
+        .day-header {
+            padding: 20px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--glass-border);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .day-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .day-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            border-radius: 15px;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .day-name {
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: 0.5px;
+        }
+
+        .day-date {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .lesson-count {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Lessons */
+        .lessons {
+            padding: 10px;
+        }
+
+        .lesson {
+            display: flex;
+            align-items: center;
+            padding: 18px 20px;
+            margin: 8px 0;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lesson::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: linear-gradient(180deg, var(--accent-1), var(--accent-2));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .lesson:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .lesson:hover::before {
+            opacity: 1;
+        }
+
+        .lesson-num {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--accent-1);
+            flex-shrink: 0;
+        }
+
+        .lesson-content {
+            flex-grow: 1;
+            padding: 0 15px;
+            min-width: 0;
+        }
+
+        .lesson-subject {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .lesson-subject-text {
+            word-break: break-word;
+        }
+
+        .lesson-teacher {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .lesson-teacher i {
+            font-size: 0.75rem;
+        }
+
+        .lesson-time {
+            font-size: 0.75rem;
+            color: var(--accent-1);
+            margin-top: 4px;
+            opacity: 0.8;
+        }
+
+        .lesson-cab {
+            padding: 10px 16px;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(123, 44, 191, 0.1));
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--accent-1);
+            flex-shrink: 0;
+            text-align: center;
+            min-width: 60px;
+        }
+
+        /* Special lesson types */
+        .lesson.practice {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .lesson.practice .lesson-num {
+            background: var(--practice-gradient);
+            color: white;
+        }
+
+        .lesson.practice .lesson-cab {
+            background: var(--practice-gradient);
+            border: none;
+            color: white;
+        }
+
+        .lesson.alternate {
+            background: linear-gradient(135deg, rgba(240, 147, 251, 0.1), rgba(245, 87, 108, 0.1));
+            border: 1px solid rgba(245, 87, 108, 0.3);
+        }
+
+        .lesson.alternate .lesson-num {
+            background: var(--red-week-gradient);
+            color: white;
+        }
+
+        .red-week-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            background: var(--red-week-gradient);
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .lesson.class-hour {
+            background: linear-gradient(135deg, rgba(255, 217, 61, 0.1), rgba(255, 107, 107, 0.1));
+            border: 1px solid rgba(255, 217, 61, 0.3);
+        }
+
+        .lesson.class-hour .lesson-num {
+            background: linear-gradient(135deg, var(--accent-4), var(--accent-3));
+            color: #1a1a2e;
+        }
+
+        /* Today badge */
+        .today-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            animation: glow 2s ease-in-out infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(0, 212, 255, 0.4); }
+            50% { box-shadow: 0 0 25px rgba(0, 212, 255, 0.6); }
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 10px 20px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-1);
+            border-color: var(--accent-1);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-gradient-1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--accent-1), var(--accent-2));
+            border-radius: 3px;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+                padding-top: max(15px, env(safe-area-inset-top));
+                padding-bottom: max(15px, env(safe-area-inset-bottom));
+            }
+            
+            .header { padding: 20px 10px; }
+            .header h1 { font-size: 1.8rem; }
+            
+            .day-header { 
+                padding: 15px; 
+            }
+            
+            .day-icon {
+                width: 42px;
+                height: 42px;
+                font-size: 1.1rem;
+            }
+            
+            .day-name { font-size: 1rem; }
+            
+            .lesson { 
+                padding: 15px 12px; 
+            }
+            
+            .lesson-num {
+                width: 38px;
+                height: 38px;
+                font-size: 0.95rem;
+            }
+            
+            .lesson-content { 
+                padding: 0 10px; 
+            }
+            
+            .lesson-subject {
+                font-size: 0.9rem;
+            }
+            
+            .lesson-cab { 
+                padding: 8px 12px;
+                font-size: 0.8rem;
+                min-width: 50px;
+            }
+            
+            .footer-links { 
+                flex-direction: column; 
+                align-items: center; 
+            }
+            
+            .bg-orb.orb-1 {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .bg-orb.orb-2 {
+                width: 200px;
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-orb orb-1"></div>
+<div class="bg-orb orb-2"></div>
+
+<div class="container">
+    <header class="header">
+        <div class="header-badge">
+            <i class="fas fa-graduation-cap"></i> 2025-2026 учебный год
+        </div>
+        <h1>4КС-23</h1>
+        <p class="header-subtitle">Расписание занятий на неделю</p>
+        <div class="week-indicator">
+            <span class="dot blue"></span>
+            <span>Синяя неделя</span>
+            <span style="opacity: 0.3; margin: 0 5px;">|</span>
+            <span class="dot red"></span>
+            <span>Красная неделя</span>
+        </div>
+    </header>
+
+    <div class="day-card" id="monday">
+        <div class="day-header">
+            <div class="day-info">
+                <div class="day-icon"><i class="fas fa-rocket"></i></div>
+                <div>
+                    <div class="day-name">ПОНЕДЕЛЬНИК</div>
+                    <div class="day-date">Пары по 1ч 20мин</div>
+                </div>
+            </div>
+            <div class="lesson-count">5 пар</div>
+        </div>
+        <div class="lessons">
+            <div class="lesson class-hour">
+                <div class="lesson-num">1</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <i class="fas fa-comments"></i>
+                        <span class="lesson-subject-text">Разговоры о важном</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user-tie"></i> Классный час</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 09:00 – 09:45</div>
+                </div>
+                <div class="lesson-cab">к2-45</div>
+            </div>
+            <div class="lesson">
+                <div class="lesson-num">2</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <span class="lesson-subject-text">МДК 03.01 Тех. обсл. и ремонт</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user"></i> Кадинский И.О.</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 09:50 – 11:10</div>
+                </div>
+                <div class="lesson-cab">к2-45</div>
+            </div>
+            <div class="lesson">
+                <div class="lesson-num">3</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <span class="lesson-subject-text">МДК 03.01 Тех. обсл. и ремонт</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user"></i> Кадинский И.О.</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 11:40 – 13:00</div>
+                </div>
+                <div class="lesson-cab">к2-45</div>
+            </div>
+            <div class="lesson">
+                <div class="lesson-num">4</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <span class="lesson-subject-text">МДК 03.01 Тех. обсл. и ремонт</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user"></i> Кадинский И.О.</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 13:10 – 14:30</div>
+                </div>
+                <div class="lesson-cab">к2-45</div>
+            </div>
+            <div class="lesson alternate">
+                <div class="lesson-num">5</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <span class="red-week-tag"><i class="fas fa-sync-alt"></i> Красная</span>
+                        <span class="lesson-subject-text">МДК 03.01</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user"></i> Катышев А.А.</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 14:40 – 16:00</div>
+                </div>
+                <div class="lesson-cab">УКМ 2</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="day-card" id="tuesday">
+        <div class="day-header">
+            <div class="day-info">
+                <div class="day-icon"><i class="fas fa-bolt"></i></div>
+                <div>
+                    <div class="day-name">ВТОРНИК</div>
+                    <div class="day-date">Пары по 1ч 30мин</div>
+                </div>
+            </div>
+            <div class="lesson-count">4 пары</div>
+        </div>
+        <div class="lessons">
+            <div class="lesson">
+                <div class="lesson-num">1</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <i class="fas fa-shield-alt"></i>
+                        <span class="lesson-subject-text">Защита информации</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user"></i> Сапрыкин С.Ю.</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 09:00 – 10:30</div>
+                </div>
+                <div class="lesson-cab">к2-42</div>
+            </div>
+            <div class="lesson">
+                <div class="lesson-num">2</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <span class="lesson-subject-text">МДК 03.01 Тех. обсл. и ремонт</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user"></i> Катышев А.А.</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 10:40 – 12:10</div>
+                </div>
+                <div class="lesson-cab">УКМ 2</div>
+            </div>
+            <div class="lesson">
+                <div class="lesson-num">3</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <i class="fas fa-chart-line"></i>
+                        <span class="lesson-subject-text">Основы экономики и планирования</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user"></i> Белецкая А.В.</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 12:40 – 14:10</div>
+                </div>
+                <div class="lesson-cab">к1-м3</div>
+            </div>
+            <div class="lesson">
+                <div class="lesson-num">4</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <span class="lesson-subject-text">МДК 03.01 Тех. обсл. и ремонт</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user"></i> Катышев А.А.</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 14:20 – 15:50</div>
+                </div>
+                <div class="lesson-cab">УКМ 2</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="day-card" id="wednesday">
+        <div class="day-header">
+            <div class="day-info">
+                <div class="day-icon"><i class="fas fa-fire"></i></div>
+                <div>
+                    <div class="day-name">СРЕДА</div>
+                    <div class="day-date">Пары по 1ч 30мин</div>
+                </div>
+            </div>
+            <div class="lesson-count">4 пары</div>
+        </div>
+        <div class="lessons">
+            <div class="lesson">
+                <div class="lesson-num">1</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <span class="lesson-subject-text">МДК 03.01 Тех. обсл. и ремонт</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user"></i> Кадинский И.О.</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 09:00 – 10:30</div>
+                </div>
+                <div class="lesson-cab">к2-45</div>
+            </div>
+            <div class="lesson">
+                <div class="lesson-num">2</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <span class="lesson-subject-text">МДК 03.01 Тех. обсл. и ремонт</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user"></i> Кадинский И.О.</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 10:40 – 12:10</div>
+                </div>
+                <div class="lesson-cab">к2-45</div>
+            </div>
+            <div class="lesson">
+                <div class="lesson-num">3</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <span class="lesson-subject-text">МДК 03.01 Тех. обсл. и ремонт (Раздел 2)</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user"></i> Катышев А.А.</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 12:40 – 14:10</div>
+                </div>
+                <div class="lesson-cab">УКМ 2</div>
+            </div>
+            <div class="lesson">
+                <div class="lesson-num">4</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <span class="lesson-subject-text">МДК 03.01 Тех. обсл. и ремонт (Раздел 2)</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user"></i> Катышев А.А.</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 14:20 – 15:50</div>
+                </div>
+                <div class="lesson-cab">УКМ 2</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="day-card" id="thursday">
+        <div class="day-header">
+            <div class="day-info">
+                <div class="day-icon"><i class="fas fa-tools"></i></div>
+                <div>
+                    <div class="day-name">ЧЕТВЕРГ</div>
+                    <div class="day-date">Пары по 1ч 30мин</div>
+                </div>
+            </div>
+            <div class="lesson-count">4 пары</div>
+        </div>
+        <div class="lessons">
+            <div class="lesson practice">
+                <div class="lesson-num">1-3</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <i class="fas fa-laptop-code"></i>
+                        <span class="lesson-subject-text">Учебная практика</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user"></i> ПМ.03 (Катышев А.А.)</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 09:00 – 14:10</div>
+                </div>
+                <div class="lesson-cab">УПМ 2</div>
+            </div>
+            <div class="lesson alternate">
+                <div class="lesson-num">4</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <span class="red-week-tag"><i class="fas fa-sync-alt"></i> Красная</span>
+                        <i class="fas fa-shield-alt"></i>
+                        <span class="lesson-subject-text">Защита информации</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user"></i> Сапрыкин С.Ю.</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 14:20 – 15:50</div>
+                </div>
+                <div class="lesson-cab">к2-42</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="day-card" id="friday">
+        <div class="day-header">
+            <div class="day-info">
+                <div class="day-icon"><i class="fas fa-glass-cheers"></i></div>
+                <div>
+                    <div class="day-name">ПЯТНИЦА</div>
+                    <div class="day-date">Пары по 1ч 30мин</div>
+                </div>
+            </div>
+            <div class="lesson-count">3 пары</div>
+        </div>
+        <div class="lessons">
+            <div class="lesson">
+                <div class="lesson-num">1</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <span class="lesson-subject-text">МДК 03.01 Тех. обсл. и ремонт</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user"></i> Кадинский И.О.</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 09:00 – 10:30</div>
+                </div>
+                <div class="lesson-cab">к2-45</div>
+            </div>
+            <div class="lesson">
+                <div class="lesson-num">2</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <span class="lesson-subject-text">МДК 03.01 Тех. обсл. и ремонт</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user"></i> Кадинский И.О.</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 10:40 – 12:10</div>
+                </div>
+                <div class="lesson-cab">к2-45</div>
+            </div>
+            <div class="lesson">
+                <div class="lesson-num">3</div>
+                <div class="lesson-content">
+                    <div class="lesson-subject">
+                        <i class="fas fa-code"></i>
+                        <span class="lesson-subject-text">МДК 03.02 Настройка и обсл. программ</span>
+                    </div>
+                    <div class="lesson-teacher"><i class="fas fa-user"></i> Катышев А.А.</div>
+                    <div class="lesson-time"><i class="far fa-clock"></i> 12:40 – 14:10</div>
+                </div>
+                <div class="lesson-cab">УКМ 2</div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Сделано с 💜 для группы 4КС-23</p>
+        <div class="footer-links">
+            <a href="https://t.me/Adun_2007"><i class="fab fa-telegram"></i> Чат группы</a>
+            <a href="#"><i class="fas fa-calendar-alt"></i> Экзамены</a>
+            <a href="#"><i class="fas fa-book"></i> Материалы</a>
+        </div>
+    </footer>
+</div>
+
+<script>
+    // Мгновенный переход к текущему дню
+    (function() {
+        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const today = days[new Date().getDay()];
+        const todayCard = document.getElementById(today);
+        
+        if (todayCard) {
+            todayCard.classList.add('today');
+            const header = todayCard.querySelector('.day-info');
+            const badge = document.createElement('span');
+            badge.className = 'today-badge';
+            badge.innerHTML = '<i class="fas fa-star"></i> СЕГОДНЯ';
+            header.appendChild(badge);
+            
+            // Мгновенный скролл без анимации
+            todayCard.scrollIntoView({ block: 'start' });
+        }
+    })();
+</script>
+
+</body>
+</html>
